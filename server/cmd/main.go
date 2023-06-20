@@ -3,30 +3,35 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/RogerWaldron/go-rest-api/server/db"
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog/log"
 )
 
 func Run() error {
 	fmt.Println("starting app...")
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		log.Fatal().Err(err).Msg(".env failed to load file")
+		return err
 	}
-	db, err := db.NewDatabase()
+	store, err := db.NewDatabase()
 	if err != nil { 
+		log.Fatal().Err(err).Msg("")
 		return err
 	} 
 
-	err = db.Ping(context.Background())
+	err = store.Ping(context.Background())
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("database connected oks")
-	
+	err = store.MigrateDB()
+	if err != nil {
+		log.Fatal().Err(err).Msg("migration failed to setup database")
+		return err
+	}	
 	return nil 
 }
 func main(){

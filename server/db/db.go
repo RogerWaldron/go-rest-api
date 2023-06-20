@@ -7,6 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 )
 
 type Database struct {
@@ -26,7 +27,7 @@ func NewDatabase() (*Database, error) {
 
 	dbConn, err := sqlx.Connect("postgres", connectionString)
 	if err != nil {
-		fmt.Println(connectionString)
+		log.Debug().Msg(connectionString)
 		return &Database{}, fmt.Errorf("failed to connect to database: %s", err)
 	}
 	
