@@ -35,13 +35,23 @@ func Run() error {
 	}
 	
 	commentService := comment.NewService(store)
+	commentService.Store.PostComment(
+		context.Background(),
+		comment.Comment{
+			ID: "123456",
+			Slug: "test",
+			Author: "Me",
+			Body: "Works or not",
+		},
+	)
 	fmt.Println(commentService.GetCommentByID(
 		context.Background(),
-		"12345",
+		"123456",
 	))
 
 	return nil 
 }
+
 func main(){
 	err := Run()
 	if err != nil {

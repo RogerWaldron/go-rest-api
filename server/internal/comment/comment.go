@@ -37,10 +37,6 @@ func NewService(store CommentStore) *Service {
 	}
 }
 
-func (s *Service) CreateComment(ctx context.Context, content Comment) (Comment, error) {
-	return Comment{}, ErrNotImplemented
-}
-
 func (S *Service) GetComments(ctx context.Context) ([]Comment, error) {
 	return []Comment{}, ErrNotImplemented
 }
@@ -54,6 +50,16 @@ func (s *Service) GetCommentByID(ctx context.Context, id string) (Comment, error
 
 	return comment, nil
 }
+
+func (s *Service) PostComment(ctx context.Context, newComment Comment) (Comment, error) {
+	result, err := s.Store.PostComment(ctx, newComment)
+	if err != nil {
+		return Comment{}, err
+	}
+
+	return result, nil
+}
+
 
 func (s *Service) UpdateComment(ctx context.Context, content Comment) (Comment, error) {
 	return Comment{}, nil
