@@ -61,11 +61,16 @@ func (s *Service) PostComment(ctx context.Context, newComment Comment) (Comment,
 }
 
 
-func (s *Service) UpdateComment(ctx context.Context, content Comment) (Comment, error) {
-	return Comment{}, nil
+func (s *Service) UpdateComment(ctx context.Context, id string, updated Comment) (Comment, error) {
+	result, err := s.Store.UpdateComment(ctx, id, updated)
+	if err != nil {
+		return Comment{}, err
+	}
+
+	return result, nil
 }
 
 func (s *Service) DeleteComment(ctx context.Context, id string) error {
-	return ErrNotImplemented
+	return s.Store.DeleteComment(ctx, id)
 }
 

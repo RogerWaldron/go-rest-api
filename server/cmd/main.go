@@ -48,6 +48,23 @@ func Run() error {
 		context.Background(),
 		"123456",
 	))
+	_, err = commentService.UpdateComment(
+		context.Background(),
+		"123456",
+		comment.Comment{
+			Slug: "test2",
+			Author: "WhoMe",
+			Body: "Works or not",
+		},
+	)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Updating Failed")
+	}
+	fmt.Println(commentService.GetCommentByID(
+		context.Background(),
+		"123456",
+	))
+	commentService.Store.DeleteComment(context.Background(),"123456")
 
 	return nil 
 }
