@@ -12,7 +12,7 @@ var (
 )
 
 type CommentStore interface {
-	GetComments(context.Context) ([]Comment, error)
+	GetComments(context.Context, int, int) ([]Comment, error)
 	GetCommentByID(context.Context, string) (Comment, error)
 	PostComment(context.Context, Comment) (Comment, error)
 	UpdateComment(context.Context, string, Comment) (Comment, error)
@@ -37,8 +37,13 @@ func NewService(store CommentStore) *Service {
 	}
 }
 
-func (S *Service) GetComments(ctx context.Context) ([]Comment, error) {
-	return []Comment{}, ErrNotImplemented
+func (s *Service) GetComments(ctx context.Context, limit int, offset int) ([]Comment, error) {
+	comments, err := s.Store.GetComments(ctx, limit, offset)
+	if err != nil {
+		return []Comment{}, err
+	}
+
+	return comments, nil
 }
 
 func (s *Service) GetCommentByID(ctx context.Context, id string) (Comment, error) {

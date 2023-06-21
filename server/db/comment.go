@@ -49,12 +49,12 @@ func (d *Database) GetCommentByID(
 		return convertCommentRowToComment(cRow), nil
 }
 
-func (d *Database) GetComments(ctx context.Context) ([]comment.Comment, error) {
+func (d *Database) GetComments(ctx context.Context, limit int, offset int) ([]comment.Comment, error) {
 	var (
 		comments []comment.Comment
 	)
 
-	rows, err := d.Client.QueryxContext(ctx, "SELECT * FROM comments")
+	rows, err := d.Client.QueryxContext(ctx, "SELECT * FROM comments LIMIT $1 OFFSET $2", limit, offset)
 	if err != nil {
 		return comments, fmt.Errorf("no comments found: %w", err)
 	}
@@ -84,7 +84,7 @@ func (d *Database) PostComment(ctx context.Context, newComment comment.Comment) 
 	rows, err := d.Client.NamedQueryContext(
 		ctx,
 		`INSERT INTO comments
-		(id, slug, body, author) VALUES,
+		(id, slug, body, author) VALUES
 		(:id, :slug, :body, :author)`,
 		newEntry,
 	)
@@ -118,7 +118,7 @@ func (d *Database) UpdateComment(ctx context.Context, id string, newComment comm
 		`UPDATE comments SET
 		slug = :slug, 
 		body = :body, 
-		author = :author,
+		author = :author
 		WHERE id = :id`,
 		newEntry,
 	)
@@ -139,14 +139,14 @@ func (d *Database) UpdateComment(ctx context.Context, id string, newComment comm
 	return convertCommentRowToComment(newEntry), nil
 }
 
-func (d *Database) DeleteComment(ctx context.Context, id string) error {
+func (d *Database) DeleteComment(ctx context.Context, deleteID string) error {
 	_, err := d.Client.ExecContext(
 		ctx,
 		`DELETE FROM comments WHERE id = $1`,
-		id,
+		deleteID,
 	 )
 	if err != nil {
-		log.Error().Err(err).Str("id", id).Msg(`Delete failed`)
+		log.Error().Err(err).Str("id", deleteID).Msg(`Delete failed`)
 		return fmt.Errorf("delete failed: %w", err)
 	}
 	
