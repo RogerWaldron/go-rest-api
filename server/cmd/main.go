@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/RogerWaldron/go-rest-api/server/db"
+	"github.com/RogerWaldron/go-rest-api/server/internal/comment"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 )
@@ -31,7 +32,14 @@ func Run() error {
 	if err != nil {
 		log.Fatal().Err(err).Msg("migration failed to setup database")
 		return err
-	}	
+	}
+	
+	commentService := comment.NewService(store)
+	fmt.Println(commentService.GetCommentByID(
+		context.Background(),
+		"12345",
+	))
+
 	return nil 
 }
 func main(){

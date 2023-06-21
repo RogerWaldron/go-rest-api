@@ -11,26 +11,27 @@ var (
 	ErrNotImplemented = errors.New("not implemented")
 )
 
-type Store interface {
-	CreateComment(context.Context, Comment) (Comment, error)
+type CommentStore interface {
 	GetComments(context.Context) ([]Comment, error)
 	GetCommentByID(context.Context, string) (Comment, error)
-	UpdateComment(context.Context, Comment) error
+	PostComment(context.Context, Comment) (Comment, error)
+	UpdateComment(context.Context, string, Comment) (Comment, error)
 	DeleteComment(context.Context, string) error
+	Ping(context.Context) error
 }
 
 type Comment struct {
-	ID string
-	Slug string
-	Body string
-	Author string
+	ID 			string 	`db:"id"`
+	Slug 		string	`db:"slug"`
+	Body 		string	`db:"body"`
+	Author 	string	`db:"author"`
 }
 
 type Service struct{
-	Store Store
+	Store CommentStore
 }
 
-func NewService(store Store) *Service {
+func NewService(store CommentStore) *Service {
 	return &Service{
 		Store: store,
 	}
@@ -54,10 +55,11 @@ func (s *Service) GetCommentByID(ctx context.Context, id string) (Comment, error
 	return comment, nil
 }
 
-func (s *Service) UpdateComment(ctx context.Context, content Comment) error {
-	return ErrNotImplemented
+func (s *Service) UpdateComment(ctx context.Context, content Comment) (Comment, error) {
+	return Comment{}, nil
 }
 
 func (s *Service) DeleteComment(ctx context.Context, id string) error {
 	return ErrNotImplemented
 }
+
