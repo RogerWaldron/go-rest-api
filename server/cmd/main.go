@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/RogerWaldron/go-rest-api/server/db"
-	"github.com/RogerWaldron/go-rest-api/server/internal/comment"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 )
@@ -33,38 +32,6 @@ func Run() error {
 		log.Fatal().Err(err).Msg("migration failed to setup database")
 		return err
 	}
-	
-	commentService := comment.NewService(store)
-	commentService.Store.PostComment(
-		context.Background(),
-		comment.Comment{
-			ID: "123456",
-			Slug: "test",
-			Author: "Me",
-			Body: "Works or not",
-		},
-	)
-	fmt.Println(commentService.GetCommentByID(
-		context.Background(),
-		"123456",
-	))
-	_, err = commentService.UpdateComment(
-		context.Background(),
-		"123456",
-		comment.Comment{
-			Slug: "test2",
-			Author: "WhoMe",
-			Body: "Works or not",
-		},
-	)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Updating Failed")
-	}
-	fmt.Println(commentService.GetCommentByID(
-		context.Background(),
-		"123456",
-	))
-	commentService.Store.DeleteComment(context.Background(),"123456")
 
 	return nil 
 }
