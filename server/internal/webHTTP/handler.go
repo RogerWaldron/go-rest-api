@@ -3,6 +3,7 @@ package webHTTP
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -25,7 +26,11 @@ func NewHandler(service CommentService) *Handler {
 	h.mapRoutes()
 
 	h.Server = &http.Server{
-		Addr: "host.docker.internal",
+		// host.docker.internal didn't work
+		Addr: "0.0.0.0:8080",
+		WriteTimeout: time.Second * 60,
+		ReadTimeout: time.Second * 60,
+		IdleTimeout: time.Second * 60,
 		Handler: h.Router,
 	}
 
