@@ -1,0 +1,30 @@
+version: "3"
+
+tasks:
+  build:
+    cmds:
+      - go build -v ./server/cmd/main.go
+
+  test:
+    cmds:
+      - go test -v ./server/...
+
+  coverage:
+    cmds:
+      - go test ./server/... -coverprofile=coverage.out
+
+  lint:
+    cmds:
+      - golangci-lint run
+
+  run:
+    cmds:
+      - docker-compose up --build
+
+  tidy:
+    cmds:
+      - go mod tidy
+
+  vendor:
+    cmds:
+      - go mod vendor

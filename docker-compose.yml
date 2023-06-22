@@ -1,0 +1,41 @@
+version: "2.18.1"
+services:
+  pgdb:
+    image: postgres:15
+    restart: always
+    container_name: comments-db
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - fullstack
+    volumes:
+      - pgdb:/var/lib/postgres/data
+
+  api:
+    build: .
+    container_name: comments-rest-api
+    environment:
+      - DB_USERNAME = postgres
+      - DB_PASSWORD = postgres
+      - DB_DB = postgres
+      - DB_HOST = pgdb
+      - DB_TABLE = postgres
+      - DB_PORT = 5432
+      - SSL_MODE = disable
+    ports:
+      - 8080:8080
+    depends_on:
+      - pgdb
+    networks:
+      - fullstack
+
+volumes:
+  pgdb:
+    driver: local
+networks:
+  fullstack:
+    driver: bridge
