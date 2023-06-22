@@ -1,11 +1,15 @@
 package webHTTP
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 )
 
 type CommentService interface {
@@ -45,10 +49,23 @@ func (h *Handler) mapRoutes() {
 }
 
 func (h *Handler) Serve() error {
-	err := h.Server.ListenAndServe()
-	if err != nil {
-		return err
-	}
+	log.Info().Msg("Starting HTTP server")
 	
+	go func() {
+		err := h.Server.ListenAndServe()
+		if err != nil {
+			log.Error().Err(err).Msg("")
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<- c
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second * 15)
+	defer cancel()
+	h.Server.Shutdown(ctx)
+	log.Info().Msg("shutting down gracefully HTTP server")
+
 	return nil
 }
