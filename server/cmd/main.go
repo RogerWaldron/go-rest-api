@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/RogerWaldron/go-rest-api/server/db"
 	"github.com/joho/godotenv"
@@ -16,7 +17,16 @@ func Run() error {
 		log.Fatal().Err(err).Msg(".env failed to load file")
 		return err
 	}
-	store, err := db.NewDatabase()
+	connectionString := fmt.Sprintf(
+		"host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_USERNAME"),
+		os.Getenv("DB_TABLE"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("SSL_MODE"),
+	)
+	store, err := db.NewDatabase(connectionString)
 	if err != nil { 
 		log.Fatal().Err(err).Msg("")
 		return err
