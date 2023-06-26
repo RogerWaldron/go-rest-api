@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 
 	"github.com/RogerWaldron/go-rest-api/server/internal/comment"
 	"github.com/google/uuid"
@@ -53,8 +54,16 @@ func (d *Database) GetComments(ctx context.Context, limit int, offset int) ([]co
 	var (
 		comments []comment.Comment
 	)
-
-	rows, err := d.Client.QueryxContext(ctx, "SELECT * FROM comments LIMIT $1 OFFSET $2", limit, offset)
+	queryString := "SELECT * FROM comments"
+	if limit != 0 {
+		get := strconv.Itoa(limit)
+		queryString += fmt.Sprintf(" LIMIT %s", get)
+	}
+	if offset != 0 {
+		from := strconv.Itoa(offset)
+		queryString += fmt.Sprintf(" OFFSET %s", from)
+	}
+	rows, err := d.Client.QueryxContext(ctx, queryString)
 	if err != nil {
 		return comments, fmt.Errorf("no comments found: %w", err)
 	}
