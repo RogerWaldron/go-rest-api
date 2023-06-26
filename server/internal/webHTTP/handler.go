@@ -12,9 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type CommentService interface {
-
-}
 
 type Handler struct {
 	Router 	*mux.Router
@@ -46,6 +43,12 @@ func (h *Handler) mapRoutes() {
 		w.Header().Add("Content-Type", "text/html; charset=utf-8")
 		fmt.Fprintf(w, "Hello World")
 	})
+
+	h.Router.HandleFunc("/api/v1/comment", h.PostComment).Methods("POST")
+	h.Router.HandleFunc("/api/v1/comment", h.GetComments).Methods("GET")
+	h.Router.HandleFunc("/api/v1/comment/{id}", h.GetCommentByID).Methods("GET")
+	h.Router.HandleFunc("/api/v1/comment/{id}", h.UpdateComment).Methods("PUT")
+	h.Router.HandleFunc("/api/v1/comment/{id}", h.DeleteComment).Methods("DELETE")
 }
 
 func (h *Handler) Serve() error {
