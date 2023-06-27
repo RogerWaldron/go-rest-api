@@ -4,18 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 
-	// "github.com/RogerWaldron/go-rest-api/server/internal/comment"
+	"github.com/RogerWaldron/go-rest-api/server/internal/comment"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
-
-type Comment struct {
-	ID 			string 	`db:"id"`
-	Slug 		string	`db:"slug"`
-	Body 		string	`db:"body"`
-	Author 	string	`db:"author"`
-}
 
 type CommentRow struct {
 	ID 			string					
@@ -24,8 +18,8 @@ type CommentRow struct {
 	Author 	sql.NullString
 }
 
-func convertCommentRowToComment(c CommentRow) Comment {
-	return Comment{
+func convertCommentRowToComment(c CommentRow) comment.Comment {
+	return comment.Comment{
 		ID: c.ID,
 		Slug: c.Slug.String,
 		Body: c.Body.String,
@@ -36,7 +30,7 @@ func convertCommentRowToComment(c CommentRow) Comment {
 func (d *Database) GetCommentByID(
 	ctx context.Context, 
 	uuid string,
-	) (Comment, error) {
+	) (comment.Comment, error) {
 		var cRow CommentRow
 		  
 		row := d.Client.QueryRowContext(
@@ -50,18 +44,26 @@ func (d *Database) GetCommentByID(
 		err := row.Scan(&cRow.ID, &cRow.Slug, &cRow.Body, &cRow.Author)
 		if err != nil {
 			log.Error().Err(err).Str("uuid", uuid).Msg("failed to get commment for uuid")
-			return Comment{}, fmt.Errorf("failed fetching comment by uuid: %w", err)
+			return comment.Comment{}, fmt.Errorf("failed fetching comment by uuid: %w", err)
 		}
 
 		return convertCommentRowToComment(cRow), nil
 }
 
-func (d *Database) GetComments(ctx context.Context, limit int, offset int) ([]Comment, error) {
+func (d *Database) GetComments(ctx context.Context, limit int, offset int) ([]comment.Comment, error) {
 	var (
-		comments []Comment
+		comments []comment.Comment
 	)
-
-	rows, err := d.Client.QueryxContext(ctx, "SELECT * FROM comments LIMIT $1 OFFSET $2", limit, offset)
+	queryString := "SELECT * FROM comments"
+	if limit != 0 {
+		get := strconv.Itoa(limit)
+		queryString += fmt.Sprintf(" LIMIT %s", get)
+	}
+	if offset != 0 {
+		from := strconv.Itoa(offset)
+		queryString += fmt.Sprintf(" OFFSET %s", from)
+	}
+	rows, err := d.Client.QueryxContext(ctx, queryString)
 	if err != nil {
 		return comments, fmt.Errorf("no comments found: %w", err)
 	}
@@ -79,7 +81,7 @@ func (d *Database) GetComments(ctx context.Context, limit int, offset int) ([]Co
 	return comments, rows.Err()
 }
 
-func (d *Database) PostComment(ctx context.Context, newComment Comment) (Comment, error) {
+func (d *Database) PostComment(ctx context.Context, newComment comment.Comment) (comment.Comment, error) {
 	newComment.ID = uuid.New().String()
 	newEntry := CommentRow{
 		ID: newComment.ID,
@@ -105,14 +107,14 @@ func (d *Database) PostComment(ctx context.Context, newComment Comment) (Comment
 			Str("author", newComment.Author).
 			Msg("failed inserting comment")
 
-		return Comment{}, fmt.Errorf("failed to insert comment: %w", err)
+		return comment.Comment{}, fmt.Errorf("failed to insert comment: %w", err)
 	}
 	defer rows.Close()
 	
 	return convertCommentRowToComment(newEntry), nil
 }
 
-func (d *Database) UpdateComment(ctx context.Context, id string, newComment Comment) (Comment, error) {
+func (d *Database) UpdateComment(ctx context.Context, id string, newComment comment.Comment) (comment.Comment, error) {
 	newEntry := CommentRow{
 		ID: id,
 		Slug: sql.NullString{String: newComment.Slug, Valid: true},
@@ -139,7 +141,7 @@ func (d *Database) UpdateComment(ctx context.Context, id string, newComment Comm
 			Str("author", newComment.Author).
 			Msg("failed inserting comment")
 
-		return Comment{}, fmt.Errorf("failed to insert comment: %w", err)
+		return comment.Comment{}, fmt.Errorf("failed to insert comment: %w", err)
 	}
 	defer row.Close()
 
