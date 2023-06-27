@@ -15,3 +15,4 @@ Application will be designed around layers:
 - **go.uuid** - for working with UUID's
 - **zerolog** - for nice logs
 - **testify** - for easier tests
+- **Package validator**   - implements value validations for structs and individual fields based on tags 
