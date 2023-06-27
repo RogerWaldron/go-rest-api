@@ -25,6 +25,9 @@ func NewHandler(service CommentService) *Handler {
 	}
 	h.Router = mux.NewRouter()
 	h.mapRoutes()
+	h.Router.Use(JSONMiddleware)
+	h.Router.Use(LoggingMiddleware)
+	h.Router.Use(TimeOutMiddleware)
 
 	h.Server = &http.Server{
 		// host.docker.internal didn't work
