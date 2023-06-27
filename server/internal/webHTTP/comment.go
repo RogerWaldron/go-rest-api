@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/RogerWaldron/go-rest-api/server/internal/comment"
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/rs/zerolog/log"
@@ -14,6 +15,7 @@ import (
 const (
 	ErrCommentToJSON = "Failed to encode the comment into JSON"
 	ErrRequestBodyToJSON = "Failed to decode the request body into JSON"
+	ErrCommentFailedValidation = "Failed to validate comment content"
 )
 
 type CommentService interface {
@@ -27,18 +29,40 @@ type CommentService interface {
 
 type queryParms struct {
 	Limit 	int `schema:"limit"`
-	Offset 	int `schema:"offset"`
+	Offset 	int `schema:"offset"` 
+}
+
+type PostCommentRequest struct {
+	Slug   string `json:"slug" validate:"required"`
+	Author string `json:"author" validate:"required"`
+	Body   string `json:"body" validate:"required"`
+}
+
+func commentFromPostCommentRequest(u PostCommentRequest) comment.Comment {
+	return comment.Comment{
+		Slug:   u.Slug,
+		Author: u.Author,
+		Body:   u.Body,
+	}
 }
 
 func (h *Handler) PostComment(w http.ResponseWriter, r *http.Request) {
-	var cmt comment.Comment
+	var postCmt PostCommentRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&cmt); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&postCmt); err != nil {
 		log.Error().Err(err).Msg(ErrRequestBodyToJSON)
 		return
 	}
 
-	cmt, err := h.Service.PostComment(r.Context(), cmt)
+	validate := validator.New()
+	err := validate.Struct(postCmt)
+	if err != nil {
+		log.Info().Err(err).Msg(ErrCommentFailedValidation)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	cmt, err := h.Service.PostComment(r.Context(), commentFromPostCommentRequest(postCmt))
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		return
@@ -96,6 +120,20 @@ func (h *Handler) GetCommentByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type UpdateCommentRequest struct {
+	Slug   string `json:"slug" validate:"required"`
+	Author string `json:"author" validate:"required"`
+	Body   string `json:"body" validate:"required"`
+}
+
+func commentFromUpdateCommentRequest(u UpdateCommentRequest) comment.Comment {
+	return comment.Comment{
+		Slug:   u.Slug,
+		Author: u.Author,
+		Body:   u.Body,
+	}
+}
+
 func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -104,16 +142,31 @@ func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var cmt comment.Comment
-	if err:= json.NewDecoder(r.Body).Decode(&cmt); err != nil {
+	var updateCmtRequest UpdateCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&updateCmtRequest); err != nil {
+		return
+	}
+
+	validate := validator.New()
+	err := validate.Struct(updateCmtRequest)
+	if err != nil {
+		log.Error().Err(err).Msg(ErrCommentFailedValidation)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err:= json.NewDecoder(r.Body).Decode(&updateCmtRequest); err != nil {
 		log.Error().Err(err).Msg(ErrRequestBodyToJSON)
 		return 
 	}
-	cmt, err := h.Service.UpdateComment(r.Context(), id, cmt)
+	cmt, err := h.Service.UpdateComment(r.Context(), id, commentFromUpdateCommentRequest(updateCmtRequest))
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+	if err := json.NewEncoder(w).Encode(cmt); err != nil {
+		panic(err)
 	}
 }
 
