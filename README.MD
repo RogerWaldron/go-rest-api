@@ -16,3 +16,4 @@ Application will be designed around layers:
 - **zerolog** - for nice logs
 - **testify** - for easier tests
 - **Package validator**   - implements value validations for structs and individual fields based on tags 
+- **go.cmp** - for comparing structs for tests
