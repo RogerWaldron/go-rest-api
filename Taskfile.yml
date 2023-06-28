@@ -9,6 +9,11 @@ tasks:
     cmds:
       - go test -v ./server/...
 
+  integration-test:
+    cmds:
+      - docker-compose up -d pgdb
+      - go test -v ./server/...
+
   coverage:
     cmds:
       - go test ./server/... -coverprofile=coverage.out
